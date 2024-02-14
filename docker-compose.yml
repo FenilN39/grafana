@@ -1,0 +1,36 @@
+version: '3'
+services:
+  grafana:
+    build: .
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - ./grafana_data:/var/lib/grafana
+    user: "1001"
+    networks:
+      - traefik-net
+    ports:
+      - 3000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.react.rule=Host(`grafana.readyle.live`)"
+      - "traefik.http.services.react.loadbalancer.server.port=3000"
+      - "traefik.http.routers.react.tls.certresolver=lets-encrypt"
+      - "traefik.http.routers.react.tls=true"
+    environment:
+      - GF_LOG_LEVEL=debug
+      - GF_LOG_MODE=console
+      - GF_SECURITY_ADMIN_PASSWORD=Fenil1234
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_USER=My_account@gmail.com
+      - GF_SMTP_HOST=smtp.gmail.com:587
+      - GF_SMTP_PASSWORD=lqezwmdgarlcxtuh
+      - GF_SMTP_SKIP_VERIFY=false
+      - GF_SMTP_FROM_NAME=grafana
+      - GF_SMTP_FROM_ADDRESS=My_account@gmail.com
+      - GF_SERVER_ROOT_URL=https://grafana.readyle.live
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+networks:
+  traefik-net:
+    external: true
