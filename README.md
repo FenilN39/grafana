@@ -1,6 +1,7 @@
 # grafana deployment on one server
 
 - deploy grafana on one server.
+- deploy alertmanager, prometheous, node_exporter setup on server which need to be monitored
 
 # usage 
 

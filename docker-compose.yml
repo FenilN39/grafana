@@ -1,36 +1,71 @@
 version: '3'
 services:
   grafana:
-    build: .
+    image: grafana/grafana:latest-ubuntu
     container_name: grafana
     restart: unless-stopped
     volumes:
       - ./grafana_data:/var/lib/grafana
+      - ./dev/provisioning:/etc/grafana/provisioning
+     # - ./config:/etc/grafana/
     user: "1001"
     networks:
       - traefik-net
-    ports:
-      - 3000
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.react.rule=Host(`grafana.readyle.live`)"
-      - "traefik.http.services.react.loadbalancer.server.port=3000"
-      - "traefik.http.routers.react.tls.certresolver=lets-encrypt"
-      - "traefik.http.routers.react.tls=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.dlbl.in`)"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana.tls.certresolver=lets-encrypt"
+      - "traefik.http.routers.grafana.tls=true"
     environment:
       - GF_LOG_LEVEL=debug
       - GF_LOG_MODE=console
       - GF_SECURITY_ADMIN_PASSWORD=Fenil1234
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SMTP_ENABLED=true
-      - GF_SMTP_USER=My_account@gmail.com
+      - GF_SMTP_USER=fenilnakrani64@gmail.com
       - GF_SMTP_HOST=smtp.gmail.com:587
       - GF_SMTP_PASSWORD=lqezwmdgarlcxtuh
       - GF_SMTP_SKIP_VERIFY=false
       - GF_SMTP_FROM_NAME=grafana
-      - GF_SMTP_FROM_ADDRESS=My_account@gmail.com
-      - GF_SERVER_ROOT_URL=https://grafana.readyle.live
+      - GF_SMTP_FROM_ADDRESS=fenilnakrani64@gmail.com
+      - GF_SERVER_ROOT_URL=https://grafana.syncpoint.live
       - GF_INSTALL_PLUGINS=grafana-clock-panel
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    volumes:
+      - ./loki_data:/mnt/config/
+    networks:
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.loki.rule=Host(`loki.dlbl.in`)"
+      - "traefik.http.services.loki.loadbalancer.server.port=3100"
+      - "traefik.http.routers.loki.tls.certresolver=lets-encrypt"
+      - "traefik.http.routers.loki.tls=true"
+      - "traefik.http.routers.loki.middlewares=loki-auth"
+      - "traefik.http.middlewares.loki-auth.basicauth.users=loki:$apr1$TioQI06H$2DpNpmB7zbaPuYo4Nwsrr."
+    command: -config.file=/mnt/config/loki-config.yaml
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: unless-stopped
+    volumes:
+      - /var/log:/var/log
+      - ./promtail:/mnt/config
+    networks:
+      - traefik-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.promtail.rule=Host(`promtail.dlbl.in`)"
+      - "traefik.http.services.promtail.loadbalancer.server.port=9080"
+      - "traefik.http.routers.promtail.tls.certresolver=lets-encrypt"
+      - "traefik.http.routers.promtail.tls=true"
+    command: -config.file=/mnt/config/promtail-config.yaml
 networks:
   traefik-net:
     external: true
